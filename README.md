@@ -1,6 +1,59 @@
-# DataAnalytics-Assessment
+Summary of Approach
+Each query was designed to:
+Extract actionable insights from transactional and customer data
+Apply appropriate filtering and joins based on data relationships
+Ensure efficiency, readability, and accuracy
+
+Q1: Identify High-Value Multi-Product Customers
+Objective:
+Find customers with at least one regular savings plan and one investment plan, including their total deposits.
+
+Approach:
+Join users_customuser, plans_plan, and savings_savingsaccount
+Filter for is_regular_savings = 1 and is_a_fund = 1
+Aggregate savings/investment counts and total confirmed_amount
+Group by customer and sort by total deposits
+Note: Only savings deposits (confirmed_amount) were used due to lack of investment transaction data.
+
+Q2: Customer Transaction Frequency Analysis
+Objective:
+Classify customers by average monthly transaction activity.
+
+Approach:
+Count transactions per user from savings_savingsaccount
+Calculate tenure in months using MIN and MAX(created_at)
+Segment users into:
+High Frequency: ≥ 10/month
+Medium Frequency: 3–9/month
+Low Frequency: < 3/month
+Edge case handling: Used safe division to prevent divide-by-zero errors for short-tenure accounts.
+
+Q3: Flag Inactive Accounts
+Objective:
+Identify savings or investment plans with no inflow in the past 365 days.
+
+Approach:
+Find latest transaction date per user
+Join with plans_plan and filter for savings or investment types
+Calculate inactivity period; flag plans with ≥ 365 days of inactivity
+
+Q4: Estimate Customer Lifetime Value (CLV)
+Objective:
+Estimate customer CLV using savings transaction history.
+
+Formula:
+CLV = (Total Txns ÷ Tenure Months) × 12 × Avg Txn Value × 0.001
+
+Approach:
+Use transaction count, sum, and average from savings_savingsaccount
+Compute tenure in months using MIN(created_at)
+Join with users_customuser and calculate CLV
+Assumption: 0.1% profit margin per transaction
+
 -- Assessment_Q1.sql
 -- Customers with at least one funded savings & investment plan
+
+Queries used for the Assessment
 SELECT
   u.id AS owner_id,
   u.name,
@@ -48,6 +101,7 @@ GROUP BY frequency_category;
 
 -- Assessment_Q3.sql
 -- Flag inactive plans with no inflow for over a year
+
 WITH last_txn_dates AS (
   SELECT
     owner_id,
